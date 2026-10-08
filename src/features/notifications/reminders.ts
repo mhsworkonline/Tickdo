@@ -6,7 +6,14 @@ import type { Repositories } from '@/data/repositories';
 import { SNOOZE_MINUTES } from '@/domain/dose-status';
 import { DAY_MS, format12h, istMinutesOfDay, MINUTE_MS } from '@/domain/time';
 import { formatQuantity } from '@/ui/format';
-import { parseReminderId, planReminders, PLAN_HORIZON_MS, type PlannedReminder } from '@/features/notifications/plan';
+import {
+  MAX_SCHEDULED,
+  MAX_SCHEDULED_IOS,
+  parseReminderId,
+  planReminders,
+  PLAN_HORIZON_MS,
+  type PlannedReminder,
+} from '@/features/notifications/plan';
 
 export const DOSE_CHANNEL = 'doses';
 export const REFILL_CHANNEL = 'refills';
@@ -69,6 +76,8 @@ function content(p: PlannedReminder, t: TFunction): Notifications.NotificationCo
     categoryIdentifier: DOSE_CATEGORY,
     sound: true,
     priority: Notifications.AndroidNotificationPriority.MAX,
+    // iOS: break through Focus modes like an alarm would (needs the time-sensitive entitlement).
+    interruptionLevel: 'timeSensitive',
   };
 }
 
@@ -79,7 +88,7 @@ function content(p: PlannedReminder, t: TFunction): Notifications.NotificationCo
 export async function syncReminders(repos: Repositories, profileId: string, t: TFunction, now = Date.now()): Promise<number> {
   const medicines = await repos.medicines.list(profileId);
   const events = await repos.doses.eventsBetween(now - 2 * DAY_MS, now + PLAN_HORIZON_MS + DAY_MS);
-  const plan = planReminders(medicines, events, now);
+  const plan = planReminders(medicines, events, now, PLAN_HORIZON_MS, Platform.OS === 'ios' ? MAX_SCHEDULED_IOS : MAX_SCHEDULED);
 
   const existing = await Notifications.getAllScheduledNotificationsAsync();
   const wanted = new Map(plan.map((p) => [p.identifier, p]));

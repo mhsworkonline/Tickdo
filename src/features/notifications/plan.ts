@@ -7,6 +7,8 @@ import type { Dose, DoseEvent, Medicine } from '@/domain/types';
 export const PLAN_HORIZON_MS = 3 * DAY_MS;
 /** Android allows ~500 alarms per app; stay well below. */
 export const MAX_SCHEDULED = 200;
+/** iOS keeps at most 64 pending local notifications per app; leave room for test/refill ones. */
+export const MAX_SCHEDULED_IOS = 56;
 
 export type PlannedReminder = {
   identifier: string;
@@ -36,6 +38,7 @@ export function planReminders(
   events: readonly DoseEvent[],
   now: number,
   horizon = PLAN_HORIZON_MS,
+  max = MAX_SCHEDULED,
 ): PlannedReminder[] {
   const byId = new Map(medicines.map((m) => [m.id, m]));
   // Include the last hour so snoozed doses from just before `now` are considered.
@@ -52,5 +55,5 @@ export function planReminders(
       plan.push({ identifier: reminderId(dose), fireAt: dose.scheduledAt, dose, medicine, isSnooze: false });
     }
   }
-  return plan.sort((a, b) => a.fireAt - b.fireAt).slice(0, MAX_SCHEDULED);
+  return plan.sort((a, b) => a.fireAt - b.fireAt).slice(0, max);
 }

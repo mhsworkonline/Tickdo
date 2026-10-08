@@ -12,6 +12,9 @@
       },
       "env": {
         "APP_ENV": "development"
+      },
+      "ios": {
+        "simulator": false
       }
     },
     "preview": {
@@ -21,6 +24,9 @@
       },
       "env": {
         "APP_ENV": "preview"
+      },
+      "ios": {
+        "simulator": false
       }
     },
     "production": {
@@ -44,6 +50,16 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      },
+      "ios": {
+        "appleId": "[APPLE_ID_EMAIL]",
+        "ascAppId": "[APP_STORE_CONNECT_APP_ID]",
+        "appleTeamId": "[TEAM_ID]"
+      }
+    }
   }
 }

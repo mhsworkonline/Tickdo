@@ -13,7 +13,13 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "Tickdo uses the camera only when you choose to photograph a prescription. The photo is read on your phone and deleted after you confirm the medicines.",
-        "ITSAppUsesNonExemptEncryption": false
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
+      },
+      "entitlements": {
+        "com.apple.developer.usernotifications.time-sensitive": true
       }
     },
     "android": {

@@ -1,4 +1,4 @@
-import { planReminders, parseReminderId, reminderId, MAX_SCHEDULED } from '@/features/notifications/plan';
+import { planReminders, parseReminderId, reminderId, MAX_SCHEDULED, MAX_SCHEDULED_IOS, PLAN_HORIZON_MS } from '@/features/notifications/plan';
 import { istInstant, MINUTE_MS } from '@/domain/time';
 import { makeEvent, makeMedicine } from '@/test-utils/factories';
 
@@ -39,6 +39,14 @@ describe('planReminders', () => {
     const times = Array.from({ length: 100 }, (_, i) => ({ minutes: i * 14, quantity: 1 }));
     const plan = planReminders([makeMedicine({ frequency: 'custom', times })], [], now);
     expect(plan).toHaveLength(MAX_SCHEDULED);
+  });
+
+  it('respects the iOS limit of 64 pending notifications and keeps the soonest', () => {
+    const times = Array.from({ length: 100 }, (_, i) => ({ minutes: i * 14, quantity: 1 }));
+    const plan = planReminders([makeMedicine({ frequency: 'custom', times })], [], now, PLAN_HORIZON_MS, MAX_SCHEDULED_IOS);
+    expect(plan).toHaveLength(MAX_SCHEDULED_IOS);
+    expect(MAX_SCHEDULED_IOS).toBeLessThan(64);
+    expect(plan.every((p, i) => i === 0 || p.fireAt >= plan[i - 1]!.fireAt)).toBe(true);
   });
 
   it('reminder ids round-trip, including ids containing colons', () => {
