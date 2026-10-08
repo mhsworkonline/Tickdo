@@ -326,7 +326,12 @@
     "resync": "Re-plan reminders now",
     "resynced": "Re-planned: {{count}} reminders scheduled",
     "available": "Available",
-    "restricted": "Restricted"
+    "restricted": "Restricted",
+    "ocrTitle": "On-device text reading",
+    "ocrBody": "Reads a built-in sample image (not a real prescription) to check that scanning works on this phone. Nothing is uploaded.",
+    "ocrRun": "Test text reading",
+    "ocrResult": "Read {{latin}} lines (English) and {{hindi}} lines (Hindi model) in {{ms}} ms:",
+    "ocrFailed": "Text reading failed:"
   },
   "delete": {
     "title": "Delete all data",

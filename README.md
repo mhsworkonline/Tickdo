@@ -1,87 +1,64 @@
 # Tickdo
 
-Medication reminder app for India. Expo (SDK 57) + TypeScript + Expo Router. Android first, iOS second, one codebase.
+A medicine reminder app for India. Built with Expo (SDK 57), TypeScript and Expo Router; one codebase covers Android first and iOS second.
 
-**Hard rules** (enforced in code review and, where possible, by lint):
-- No LLM / generative AI, no paid cloud OCR or vision APIs. ESLint blocks known SDK imports (`eslint.config.js`).
-- The app never suggests, calculates or changes a dose or timing.
-- Nothing becomes a reminder until the user explicitly confirms it. No "confirm all".
-- Health data never goes to analytics or third parties.
+**Hard rules** (enforced in code and tests):
+- No LLM or generative AI, and no paid cloud OCR. ESLint blocks those SDK imports. Prescription reading uses on-device Google ML Kit plus deterministic rules.
+- The app never suggests, calculates or changes a dose or timing. Reminder times are never pre-filled.
+- Nothing becomes a reminder until the user explicitly confirms it. There is no "confirm all".
+- Scanned items show the text read from the photo next to the interpreted values.
+- Health data is encrypted at rest (SQLCipher). Photos are deleted on confirm or after 7 days. Nothing goes to analytics.
 
-## Setup (Windows 11, no Android Studio needed)
-
-1. Install Node 22 LTS (already present).
-2. `npm install`
-3. `cp .env.example .env` (values are only needed from Deliverable 6 onward).
-4. Checks: `npm run verify` (typecheck + lint + tests).
-
-### Running on the Android emulator (fastest for day-to-day work)
-
-Needs the Android SDK (found at `C:\Android\Sdk`) and an emulator created in Android Studio's Device Manager.
+## Run it
 
 ```sh
-node runonemulator.js          # or: npm run emulator
-node runonemulator.js --fast   # or: npm run emulator:fast   (skip the native build)
-```
-The script boots the emulator, builds the app, installs it, and starts Metro. Leave that terminal open. Code changes then reload on the emulator straight away.
-- The **first** run takes about 30 minutes because Gradle downloads the NDK, CMake and dependencies. Later runs take a minute or two.
-- Use `--fast` when you've only changed TypeScript. Run it without `--fast` after adding or upgrading a native package.
-- Other options: `--avd <name>` picks an emulator, and `--cold` cold-boots a stuck emulator.
-- Press `Ctrl+M` in the emulator to open the developer menu (Reload, inspector).
-
-### Getting the app on your Android phone
-
-Tickdo uses native modules (notifications, ML Kit, encrypted SQLite), so it **does not run in Expo Go**.
-Builds run in Expo's cloud and produce an `.apk` you install directly.
-
-One-time:
-```sh
-npx eas-cli@latest login          # your Expo account
-npx eas-cli@latest init           # links this folder to an Expo project (writes projectId into app.json)
+npm install
+node runonemulator.js        # standalone app on the Android emulator: tap the icon, no server needed
+node runonemulator.js --dev  # development app with live reload (keep the terminal open)
+npm run verify               # typecheck + lint + 205 unit tests + 25 RLS tests
 ```
 
-Build an installable APK:
-```sh
-npm run build:preview-apk         # standalone app, no laptop needed to run it
-npm run build:dev-apk             # development client: live-reloads from your laptop
-```
-When the build finishes (about 10–20 minutes), EAS prints a link and a QR code. Open it on the phone, download the APK, and allow "install unknown apps" when Android asks.
+On a real phone without Android Studio: `npm run build:preview-apk` (EAS cloud build). It prints a link to an installable APK.
 
-With the **development** APK installed, run `npm start` on the laptop with the phone on the same Wi-Fi network. Then open Tickdo on the phone and pick the server. Code changes appear on the phone straight away. You only need a new APK after adding or changing a native module.
-
-## Folder structure
-
-```
-src/
-  app/                 Expo Router routes only (screens + layouts)
-    onboarding/        language → disclaimer → (optional sign-in, D6)
-    (tabs)/            Today, Medicines, Dose log, Settings
-  domain/              (D2) pure functions: schedule generation, dose status, refill math,
-                       frequency lookup. No React, no I/O. 100% unit tested.
-  data/                (D2) expo-sqlite (SQLCipher) schema, migrations, repositories
-  features/
-    notifications/     (D3) expo-notifications, exact-alarm permission, reboot rescheduling
-    scan/              (D5) camera, image checks, ML Kit OCR, deterministic parser + fixtures
-    battery/           (D3) OEM battery-restriction detection and guidance
-  i18n/                i18next setup; locales/en.json, locales/hi.json (key parity is tested)
-  state/               React context for app-wide state
-  storage/             SecureStore-backed small preferences (not health data)
-  ui/                  Accessible primitives: 48dp targets, font scaling, high contrast
-  test-utils/          Jest mocks
-supabase/              (D6) migrations, RLS policies, policy tests
-```
-
-## Deliverables
+## Status
 
 | # | Deliverable | Status |
 |---|---|---|
 | 1 | Scaffold, environment, folder structure | Done |
-| 2 | Local DB schema, migrations, pure functions + tests | |
-| 3 | Manual add, Today screen, local notifications on device | |
-| 4 | Dose log, refill tracking | |
-| 5 | Prescription scan (ML Kit), parser, confirmation, accuracy report | |
-| 6 | Supabase auth, schema, RLS + tests | |
-| 7 | RevenueCat paywall, free-tier limits | |
-| 8 | Caregiver sharing | |
-| 9 | Play Store readiness | |
-| 10 | iOS build and checklist | |
+| 2 | Encrypted SQLite schema, migrations, pure functions + tests | Done |
+| 3 | Manual add, Today screen, local notifications | Done. Verified on the Android 15 emulator: exact alarm, Taken from the notification, reboot re-arm. **Physical Xiaomi/Realme test still to do.** |
+| 4 | Dose history, refill tracking | Done |
+| 5 | Prescription scan (ML Kit), parser, confirmation | Done. **Accuracy study not yet run** (needs 100 real prescriptions); see `docs/accuracy-report.md`. |
+| 6 | Supabase auth, schema, RLS + tests | Done (code and tests). **Needs your Supabase project and SMS (DLT) setup.** |
+| 7 | RevenueCat paywall, free-tier limits | Done (code). **Needs RevenueCat and Play products.** |
+| 8 | Caregiver sharing | Done (code). **Needs Supabase, plus FCM for push alerts.** |
+| 9 | Play Store readiness | Docs and icons done. Placeholders need filling (see the release checklist). |
+| 10 | iOS build readiness and checklist | Config and docs done. **Not compiled yet** (needs EAS and an Apple account). |
+
+## Docs
+
+- `docs/play-store/release-checklist.md`: everything left before release, in one list
+- `docs/accuracy-report.md`: how to run the scan accuracy study (gate)
+- `docs/catalog.md`: importing the licensed medicine list
+- `docs/supabase-setup.md`, `docs/revenuecat-setup.md`
+- `docs/play-store/`: privacy policy, Data safety answers, content rating, declarations, listing
+- `docs/ios/checklist.md`
+
+## Structure
+
+```
+src/app/              Expo Router screens (onboarding, tabs, medicine, scan, settings, caregiver)
+src/domain/           Pure logic: IST time, schedules, dose status, history, refill, frequency table
+src/data/             SQLCipher database, migrations, repositories (tested against real SQLite)
+src/features/
+  notifications/      Reminder plan (pure) and scheduling, Taken/Snooze/Skip handling
+  scan/               Photo quality checks, OCR pipeline, deterministic parser, accuracy harness
+  catalog/            Medicine list search (Fuse.js) and OCR matching (edit distance)
+  setup/              Exact-alarm and battery guidance (Xiaomi, Realme, Vivo, Samsung)
+  account/ caregiver/ plus/   Supabase auth, sharing, RevenueCat
+src/services/         App services, background tasks (headless notification actions, maintenance)
+src/i18n/             English and Hindi (key parity and usage are tested)
+src/ui/               Design system: high contrast, 48dp+ targets, system font scaling
+modules/tickdo-native Custom Expo module: ML Kit OCR, exact-alarm and battery status, OEM settings
+supabase/             Migration with RLS, policy tests (PGlite), notify-overdue Edge Function
+```

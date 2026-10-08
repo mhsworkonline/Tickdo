@@ -1,4 +1,6 @@
 import * as BackgroundTask from 'expo-background-task';
+import { Asset } from 'expo-asset';
+import * as Native from 'tickdo-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -23,6 +25,7 @@ export default function Diagnostics() {
   const { repos } = useServices();
   const [info, setInfo] = useState<Info | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [ocr, setOcr] = useState<string | null>(null);
 
   const load = async () => {
     const [count, last, status, bg] = await Promise.all([
@@ -71,6 +74,35 @@ export default function Diagnostics() {
         <Row label={t('diagnostics.manufacturer')} value={<AppText variant="bodyStrong">{info.status.manufacturer || '—'}</AppText>} />
         <Divider />
         <Row label={t('diagnostics.android')} value={<AppText variant="bodyStrong">{info.status.apiLevel ?? '—'}</AppText>} />
+      </Card>
+      <Card>
+        <AppText variant="bodyStrong">{t('diagnostics.ocrTitle')}</AppText>
+        <AppText variant="caption" tone="muted">
+          {t('diagnostics.ocrBody')}
+        </AppText>
+        <Button
+          label={t('diagnostics.ocrRun')}
+          variant="secondary"
+          icon="scan"
+          compact
+          onPress={async () => {
+            setOcr(t('scan.reading'));
+            try {
+              // Synthetic sample image bundled with the app (not a real prescription).
+              const [asset] = await Asset.loadAsync(require('../../../assets/samples/ocr-sample.png'));
+              const uri = asset?.localUri ?? asset?.uri ?? '';
+              const start = Date.now();
+              const latin = await Native.recognizeText(uri, 'latin');
+              const hindi = await Native.recognizeText(uri, 'devanagari');
+              const summary = t('diagnostics.ocrResult', { latin: latin.lines.length, hindi: hindi.lines.length, ms: Date.now() - start });
+              const sample = latin.lines.slice(0, 4).map((l) => `• ${l.text}`);
+              setOcr([summary, ...sample].join('\n'));
+            } catch (e) {
+              setOcr(`${t('diagnostics.ocrFailed')} ${e instanceof Error ? e.message : ''}`);
+            }
+          }}
+        />
+        {ocr ? <AppText testID="ocr-result">{ocr}</AppText> : null}
       </Card>
       {message ? <AppText tone="success">{message}</AppText> : null}
       <Button

@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 /**
- * Start an Android emulator and run Tickdo on it (development build + live reload).
+ * Start an Android emulator and install Tickdo on it.
  *
  * Usage:
- *   node runonemulator.js              full run: boot emulator, build native app if needed, install, start Metro
- *   node runonemulator.js --fast       skip the native build; reuse the installed app and just start Metro
- *                                      (fine for JS/TS changes; do a full run after adding a native module)
+ *   node runonemulator.js              STANDALONE app (default): everything is inside the APK, so you
+ *                                      just tap the Tickdo icon. No laptop server needed afterwards.
+ *   node runonemulator.js --dev        DEVELOPMENT app with live reload. Keep this terminal open;
+ *                                      the app loads its code from your laptop (Metro).
+ *   node runonemulator.js --dev --fast reuse the installed development app, just start Metro
  *   node runonemulator.js --avd NAME   use a specific emulator (default: first one found)
- *   node runonemulator.js --cold       cold-boot the emulator (fixes a stuck/odd emulator state)
+ *   node runonemulator.js --cold       cold-boot the emulator (fixes a stuck emulator)
  *
- * The first full run takes several minutes (Gradle downloads the NDK, CMake and dependencies).
- * Later runs are incremental and much faster.
+ * The first build takes a long time (Gradle downloads the NDK, CMake and dependencies; the
+ * standalone build also optimises the app). Later builds are incremental and much faster.
+ * Switching between --dev and standalone reinstalls the app; your test data on the
+ * emulator is kept unless the signatures differ (then the old app is removed first).
  */
 const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -26,6 +30,7 @@ const option = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
+const DEV = flag('--dev');
 
 function log(msg) {
   console.log(`\x1b[36m[tickdo]\x1b[0m ${msg}`);
@@ -141,32 +146,40 @@ function isInstalled(serial) {
   return run(adb, ['-s', serial, 'shell', 'pm', 'list', 'packages', APP_ID]).includes(`package:${APP_ID}`);
 }
 
-function expo(expoArgs) {
+function expo(expoArgs, onExit) {
   log(`npx expo ${expoArgs.join(' ')}`);
   // shell: true is required on Windows to launch npx (.cmd) from Node.
   const child = spawn('npx', ['expo', ...expoArgs], { env, stdio: 'inherit', shell: true, cwd: __dirname });
-  child.on('exit', (code) => process.exit(code ?? 0));
+  child.on('exit', (code) => (onExit ? onExit(code ?? 0) : process.exit(code ?? 0)));
 }
 
 async function main() {
   checkJava();
   const serial = await bootEmulator();
-  // Lets the app reach Metro on the laptop via localhost:8081, independent of Wi-Fi IP changes.
-  run(adb, ['-s', serial, 'reverse', 'tcp:8081', 'tcp:8081']);
-
-  if (flag('--fast')) {
-    if (!isInstalled(serial)) {
-      log('Tickdo is not installed on this emulator yet, doing a full build instead.');
-    } else {
-      expo(['start', '--dev-client', '--android']);
-      return;
-    }
-  }
-
   // Expo CLI selects devices by name; for an emulator that is its AVD name.
   const avdName = run(adb, ['-s', serial, 'emu', 'avd', 'name']).split(/\r?\n/)[0].trim();
-  log('Building and installing the development build (first time takes several minutes)...');
-  expo(['run:android', ...(avdName ? ['--device', avdName] : [])]);
+  const device = avdName ? ['--device', avdName] : [];
+
+  if (!DEV) {
+    log('Building the standalone app (first time takes a while)...');
+    expo(['run:android', '--variant', 'release', '--no-bundler', ...device], (code) => {
+      if (code === 0) {
+        run(adb, ['-s', serial, 'shell', 'monkey', '-p', APP_ID, '-c', 'android.intent.category.LAUNCHER', '1']);
+        log('Done. Tickdo is installed. Open it from the app drawer any time; no laptop server needed.');
+      }
+      process.exit(code);
+    });
+    return;
+  }
+
+  // Development mode: the app loads JS from Metro on this laptop via localhost:8081.
+  run(adb, ['-s', serial, 'reverse', 'tcp:8081', 'tcp:8081']);
+  if (flag('--fast') && isInstalled(serial)) {
+    expo(['start', '--dev-client', '--android']);
+    return;
+  }
+  log('Building and installing the development app (first time takes several minutes)...');
+  expo(['run:android', ...device]);
 }
 
 main().catch((err) => fail(err instanceof Error ? err.message : String(err)));
