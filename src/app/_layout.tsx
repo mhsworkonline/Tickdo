@@ -126,6 +126,7 @@ function RootStack() {
         <Stack.Screen name="medicine" />
         <Stack.Screen name="scan" />
         <Stack.Screen name="settings" />
+        <Stack.Screen name="caregiver" />
       </Stack.Protected>
       <Stack.Protected guard={!onboarded}>
         <Stack.Screen name="onboarding" />

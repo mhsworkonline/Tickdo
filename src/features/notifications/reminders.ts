@@ -10,6 +10,7 @@ import { parseReminderId, planReminders, PLAN_HORIZON_MS, type PlannedReminder }
 
 export const DOSE_CHANNEL = 'doses';
 export const REFILL_CHANNEL = 'refills';
+export const CAREGIVER_CHANNEL = 'caregiver';
 export const DOSE_CATEGORY = 'dose';
 export const ACTION = { taken: 'TAKEN', snooze: 'SNOOZE', skip: 'SKIP' } as const;
 
@@ -39,6 +40,10 @@ export async function configureNotifications(t: TFunction): Promise<void> {
     await Notifications.setNotificationChannelAsync(REFILL_CHANNEL, {
       name: t('notif.channelRefills'),
       importance: Notifications.AndroidImportance.DEFAULT,
+    });
+    await Notifications.setNotificationChannelAsync(CAREGIVER_CHANNEL, {
+      name: t('notif.channelCaregiver'),
+      importance: Notifications.AndroidImportance.HIGH,
     });
   }
   await Notifications.setNotificationCategoryAsync(DOSE_CATEGORY, [

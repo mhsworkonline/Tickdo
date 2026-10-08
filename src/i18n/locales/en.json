@@ -288,7 +288,8 @@
     "testTitle": "Tickdo test reminder",
     "testBody": "If you can see and hear this, reminders are working.",
     "refillTitle": "Refill soon: {{name}}",
-    "refillBody": "About {{days}} days left at your current schedule."
+    "refillBody": "About {{days}} days left at your current schedule.",
+    "channelCaregiver": "Caregiver alerts"
   },
   "settings": {
     "title": "Settings",
@@ -497,6 +498,13 @@
     "lastSynced": "Updated {{time}}",
     "overdueAlert": "{{name}}: a dose is more than 60 minutes late",
     "viewLog": "View dose history",
-    "whatIsShared": "Shared: medicine names, dose times, and whether each dose was taken, skipped or missed. Not shared: photos, scans, notes."
+    "whatIsShared": "Shared: medicine names, dose times, and whether each dose was taken, skipped or missed. Not shared: photos, scans, notes.",
+    "patientLogTitle": "{{name}}: doses",
+    "unnamed": "Your family member",
+    "leave": "Stop caring",
+    "leaveConfirm": "Stop receiving dose updates and alerts for this person?",
+    "invitePending": "Waiting for them to accept",
+    "offline": "Could not reach the server. Pull down or try again when online.",
+    "noDoses": "No doses shared yet."
   }
 }

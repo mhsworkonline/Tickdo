@@ -83,9 +83,11 @@ describe('profiles', () => {
     assert.deepEqual(await as(C, `select * from profiles where id = '${A.id}'`), []);
   });
 
-  it('profiles_select: an accepted caregiver can read the patient name, a pending one cannot', async () => {
-    const link = await invite();
+  it('profiles_select: the invited phone and the accepted caregiver can read the patient name; strangers cannot', async () => {
     assert.deepEqual(await as(B, `select display_name from profiles where id = '${A.id}'`), []);
+    const link = await invite();
+    assert.deepEqual(await as(B, `select display_name from profiles where id = '${A.id}'`), [{ display_name: 'Asha' }]);
+    assert.deepEqual(await as(C, `select display_name from profiles where id = '${A.id}'`), []);
     await as(B, 'select respond_to_invite($1, true)', [link]);
     assert.deepEqual(await as(B, `select display_name from profiles where id = '${A.id}'`), [{ display_name: 'Asha' }]);
   });
@@ -216,14 +218,19 @@ describe('overdue alerts (server job)', () => {
     await rejects(as(B, 'select * from overdue_doses_to_alert()'));
   });
 
-  it('returns only pending doses >60 min late with an accepted caregiver', async () => {
+  it('returns doses >60 min late that were not taken or skipped, with an accepted caregiver', async () => {
     await acceptedLink();
     await as(B, `insert into push_tokens (user_id, token) values ('${B.id}', 'ExponentPushToken[b]')`);
     await dose('late', 'pending', 61);
     await dose('recent', 'pending', 59);
     await dose('taken', 'taken', 120);
-    const rows = await as('service', 'select dose_key, patient_name, tokens from overdue_doses_to_alert()');
-    assert.deepEqual(rows, [{ dose_key: 'late', patient_name: 'Asha', tokens: ['ExponentPushToken[b]'] }]);
+    await dose('skipped', 'skipped', 120);
+    await dose('marked-missed', 'missed', 75);
+    const rows = await as('service', 'select dose_key, patient_name, tokens from overdue_doses_to_alert() order by dose_key');
+    assert.deepEqual(rows, [
+      { dose_key: 'late', patient_name: 'Asha', tokens: ['ExponentPushToken[b]'] },
+      { dose_key: 'marked-missed', patient_name: 'Asha', tokens: ['ExponentPushToken[b]'] },
+    ]);
   });
 
   it('no alerts without an accepted caregiver', async () => {

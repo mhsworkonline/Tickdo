@@ -76,19 +76,6 @@ export const MIGRATIONS: readonly { version: number; sql: string }[] = [
       );
     `,
   },
-  {
-    version: 2,
-    sql: `
-      -- Changes waiting to be pushed to the server for caregiver sharing (Deliverable 8).
-      CREATE TABLE outbox (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        kind TEXT NOT NULL,
-        payload TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        attempts INTEGER NOT NULL DEFAULT 0
-      );
-    `,
-  },
 ];
 
 export const LATEST_VERSION = MIGRATIONS[MIGRATIONS.length - 1]?.version ?? 0;

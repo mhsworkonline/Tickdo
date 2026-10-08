@@ -37,7 +37,7 @@ create table public.shared_doses (
   updated_at timestamptz not null default now(),
   primary key (patient_id, dose_key)
 );
-create index shared_doses_overdue on public.shared_doses (scheduled_at) where status = 'pending' and overdue_alerted_at is null;
+create index shared_doses_overdue on public.shared_doses (scheduled_at) where status in ('pending', 'missed') and overdue_alerted_at is null;
 
 create table public.push_tokens (
   user_id uuid not null references auth.users (id) on delete cascade,
@@ -62,6 +62,16 @@ as $$
   )
 $$;
 
+-- The invited person may see who invited them (display name only) before accepting.
+create function public.has_pending_invite_from(patient uuid) returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (
+    select 1 from caregiver_links
+    where patient_id = patient and status = 'pending' and caregiver_phone = public.current_phone()
+  )
+$$;
+
 -- ─── Row Level Security ──────────────────────────────────────────────────────
 
 alter table public.profiles enable row level security;
@@ -69,9 +79,9 @@ alter table public.caregiver_links enable row level security;
 alter table public.shared_doses enable row level security;
 alter table public.push_tokens enable row level security;
 
--- profiles: own row; an accepted caregiver may read the patient's display name.
+-- profiles: own row; an accepted caregiver, or the person invited, may read the display name.
 create policy profiles_select on public.profiles for select to authenticated
-  using (id = auth.uid() or public.is_caregiver_of(id));
+  using (id = auth.uid() or public.is_caregiver_of(id) or public.has_pending_invite_from(id));
 create policy profiles_insert on public.profiles for insert to authenticated
   with check (id = auth.uid());
 create policy profiles_update on public.profiles for update to authenticated
@@ -164,7 +174,7 @@ begin
   return remaining;
 end $$;
 
--- Server job only (service role): pending doses more than 60 minutes late whose patient has an
+-- Server job only (service role): doses not taken/skipped and more than 60 minutes late whose patient has an
 -- accepted caregiver, with that caregiver's push tokens. Called by the notify-overdue function.
 create function public.overdue_doses_to_alert() returns table (
   patient_id uuid, dose_key text, caregiver_id uuid, patient_name text, tokens text[]
@@ -176,7 +186,7 @@ as $$
     from shared_doses d
     join caregiver_links l on l.patient_id = d.patient_id and l.status = 'accepted'
     left join profiles p on p.id = d.patient_id
-   where d.status = 'pending'
+   where d.status in ('pending', 'missed') -- the patient phone may already have marked it missed
      and d.overdue_alerted_at is null
      and d.scheduled_at < now() - interval '60 minutes'
      and d.scheduled_at > now() - interval '1 day'
@@ -187,6 +197,8 @@ revoke all on function public.leave_caregiving(uuid) from public, anon;
 revoke all on function public.delete_my_account() from public, anon;
 revoke all on function public.overdue_doses_to_alert() from public, anon, authenticated;
 revoke all on function public.is_caregiver_of(uuid) from public, anon;
+revoke all on function public.has_pending_invite_from(uuid) from public, anon;
+grant execute on function public.has_pending_invite_from(uuid) to authenticated;
 grant execute on function public.respond_to_invite(uuid, boolean) to authenticated;
 grant execute on function public.leave_caregiving(uuid) to authenticated;
 grant execute on function public.delete_my_account() to authenticated;

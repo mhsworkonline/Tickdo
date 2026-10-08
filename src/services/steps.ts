@@ -5,10 +5,13 @@
 import * as Notifications from 'expo-notifications';
 
 import { openDatabase } from '@/data/database';
-import { canUseRefillAlerts, type Plan } from '@/domain/entitlements';
+import { canUseCaregiverSharing, canUseRefillAlerts, type Plan } from '@/domain/entitlements';
 import { MISS_LOOKBACK_MS, unrecordedMisses } from '@/domain/history';
 import { daysRemaining, needsRefill } from '@/domain/refill';
 import { DAY_MS, istDateKey } from '@/domain/time';
+import { isServerConfigured } from '@/features/account/supabase';
+import { myLink, syncSharedDoses } from '@/features/caregiver/api';
+import { buildSharedDoses, SHARE_FUTURE_MS, SHARE_PAST_MS } from '@/features/caregiver/share';
 import { REFILL_CHANNEL } from '@/features/notifications/reminders';
 import { deletePhoto } from '@/features/scan/pipeline';
 import { photosToDelete } from '@/features/scan/retention';
@@ -56,4 +59,19 @@ registerMaintenanceStep('purge-scan-photos', async ({ now }) => {
     deletePhoto(p.photoUri);
     await repos.scans.markPhotoDeleted(p.id);
   }
+});
+
+/**
+ * Caregiver sharing (Plus): while a caregiver has accepted, keep the server copy of the ±2 day
+ * dose window current so the server can alert them about late doses. When sharing is off or the
+ * plan has lapsed, nothing is uploaded; revoking deletes what was shared.
+ */
+registerMaintenanceStep('caregiver-sync', async ({ profileId, now }) => {
+  if (!isServerConfigured || !canUseCaregiverSharing(await cachedPlan())) return;
+  const link = await myLink();
+  if (link?.status !== 'accepted') return;
+  const { repos } = await openDatabase();
+  const medicines = await repos.medicines.list(profileId);
+  const events = await repos.doses.eventsBetween(now - SHARE_PAST_MS - DAY_MS, now + SHARE_FUTURE_MS);
+  await syncSharedDoses(buildSharedDoses(medicines, events, now), now);
 });
