@@ -22,12 +22,12 @@ export default function ProfileStep() {
     }
     await repos.profiles.rename(profileId, name.trim());
     changed();
-    router.push('/onboarding/reminders');
+    router.push('/onboarding/account');
   };
 
   return (
     <Screen back backLabel={t('common.back')} footer={<Button testID="profile-next" label={t('common.continue')} onPress={next} />}>
-      <StepDots step={3} total={4} />
+      <StepDots step={3} total={5} />
       <AppText variant="title" accessibilityRole="header">
         {t('onboarding.profile.title')}
       </AppText>

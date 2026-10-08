@@ -20,7 +20,7 @@ export default function RemindersStep() {
           <Button label={t('setup.skip')} variant="ghost" onPress={finishOnboarding} />
         </>
       }>
-      <StepDots step={4} total={4} />
+      <StepDots step={5} total={5} />
       <AppText variant="title" accessibilityRole="header">
         {t('setup.title')}
       </AppText>

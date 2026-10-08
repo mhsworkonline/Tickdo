@@ -27,7 +27,7 @@ export default function DisclaimerStep() {
           }}
         />
       }>
-      <StepDots step={2} total={4} />
+      <StepDots step={2} total={5} />
       <Disclaimer />
     </Screen>
   );

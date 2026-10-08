@@ -13,6 +13,8 @@ import { REFILL_CHANNEL } from '@/features/notifications/reminders';
 import { deletePhoto } from '@/features/scan/pipeline';
 import { photosToDelete } from '@/features/scan/retention';
 import { registerMaintenanceStep } from '@/services/maintenance';
+// Registers server-side account deletion with delete-all.
+import '@/features/account/auth';
 
 export const KV_PLAN = 'plan.current';
 

@@ -35,7 +35,7 @@ export default function LanguageStep() {
         </AppText>
         <AppText tone="onPrimary">{t('onboarding.welcomeBody')}</AppText>
       </View>
-      <StepDots step={1} total={4} />
+      <StepDots step={1} total={5} />
       <AppText variant="title" accessibilityRole="header">
         {t('onboarding.language.title')}
       </AppText>

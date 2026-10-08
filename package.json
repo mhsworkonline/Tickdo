@@ -48,11 +48,13 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
+    "react-native-url-polyfill": "^4.0.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.1",
     "tickdo-native": "file:./modules/tickdo-native"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "29.5.14",
     "@types/node": "^22.20.5",
@@ -71,11 +73,12 @@
     "lint": "expo lint",
     "typecheck": "node scripts/typegen.js && tsc --noEmit",
     "test": "jest",
-    "verify": "npm run typecheck && npm run lint && npm test",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run test:db",
     "build:dev-apk": "npx eas-cli@latest build --profile development --platform android",
     "build:preview-apk": "npx eas-cli@latest build --profile preview --platform android",
     "emulator": "node runonemulator.js",
-    "emulator:fast": "node runonemulator.js --fast"
+    "emulator:fast": "node runonemulator.js --fast",
+    "test:db": "node --test supabase/tests/rls.test.mjs"
   },
   "private": true,
   "jest": {
