@@ -3,35 +3,43 @@ import { Tabs } from 'expo-router/js-tabs';
 import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MIN_TOUCH_TARGET } from '@/ui/theme';
+import { fonts } from '@/ui/theme';
 import { useColors } from '@/ui/use-colors';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-function icon(name: IconName) {
-  return function TabIcon({ color, size }: { color: ColorValue; size: number }) {
-    return <Ionicons name={name} color={color} size={size} />;
+function icon(active: IconName, inactive: IconName) {
+  return function TabIcon({ color, focused }: { color: ColorValue; size: number; focused: boolean }) {
+    return <Ionicons name={focused ? active : inactive} color={color} size={26} />;
   };
 }
 
 export default function TabsLayout() {
-  const { t } = useTranslation();
-  const colors = useColors();
+  const { t, i18n } = useTranslation();
+  const c = useColors();
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.background, minHeight: MIN_TOUCH_TARGET + 16 },
-        tabBarLabelStyle: { fontSize: 14, fontWeight: '600' },
+        tabBarActiveTintColor: c.primary,
+        tabBarInactiveTintColor: c.textMuted,
+        tabBarStyle: {
+          backgroundColor: c.surface,
+          borderTopColor: c.border,
+          height: 68 + insets.bottom,
+          paddingTop: 8,
+          paddingBottom: 8 + insets.bottom,
+        },
+        tabBarLabelStyle: i18n.language === 'hi' ? { fontSize: 14, fontWeight: '600' } : { fontFamily: fonts.bodySemi, fontSize: 14 },
         tabBarAllowFontScaling: true,
       }}>
-      <Tabs.Screen name="index" options={{ title: t('tabs.today'), tabBarIcon: icon('today-outline') }} />
-      <Tabs.Screen name="medicines" options={{ title: t('tabs.medicines'), tabBarIcon: icon('medkit-outline') }} />
-      <Tabs.Screen name="log" options={{ title: t('tabs.log'), tabBarIcon: icon('list-outline') }} />
-      <Tabs.Screen name="settings" options={{ title: t('tabs.settings'), tabBarIcon: icon('settings-outline') }} />
+      <Tabs.Screen name="index" options={{ title: t('tabs.today'), tabBarIcon: icon('today', 'today-outline') }} />
+      <Tabs.Screen name="medicines" options={{ title: t('tabs.medicines'), tabBarIcon: icon('medkit', 'medkit-outline') }} />
+      <Tabs.Screen name="log" options={{ title: t('tabs.log'), tabBarIcon: icon('calendar', 'calendar-outline') }} />
+      <Tabs.Screen name="settings" options={{ title: t('tabs.settings'), tabBarIcon: icon('settings', 'settings-outline') }} />
     </Tabs>
   );
 }

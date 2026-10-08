@@ -1,0 +1,10 @@
+{
+  "name": "tickdo-native",
+  "version": "0.1.0",
+  "description": "Tickdo native helpers: on-device ML Kit OCR, exact alarm and battery optimisation status",
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "author": "Tickdo",
+  "homepage": "https://tickdo.app",
+  "private": true
+}

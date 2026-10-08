@@ -10,7 +10,11 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "in.tickdo.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Tickdo uses the camera only when you choose to photograph a prescription. The photo is read on your phone and deleted after you confirm the medicines.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "in.tickdo.app",
@@ -21,7 +25,26 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "allowBackup": false,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.CAMERA",
+        "android.permission.VIBRATE"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "web": {
       "output": "static",
@@ -46,7 +69,28 @@
         }
       ],
       "expo-background-task",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "color": "#0F5E57",
+          "defaultChannel": "doses"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Tickdo uses the camera only when you choose to photograph a prescription. The photo is read on your phone and deleted after you confirm the medicines.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
+        }
+      ],
+      [
+        "expo-font",
+        {}
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

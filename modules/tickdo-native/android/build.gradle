@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'app.tickdo'
+version = '0.1.0'
+
+android {
+  namespace "app.tickdo.nativemodule"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  // Google ML Kit text recognition, bundled models: free, fully on-device, works offline.
+  implementation 'com.google.mlkit:text-recognition:16.0.1'
+  implementation 'com.google.mlkit:text-recognition-devanagari:16.0.1'
+}

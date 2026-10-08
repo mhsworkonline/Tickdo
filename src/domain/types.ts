@@ -32,6 +32,8 @@ export type Medicine = {
   /** Units (tablets, ml…) the user says they have. null = not tracking refills. */
   unitsOnHand: number | null;
   active: boolean;
+  /** When reminders were stopped; null while active. */
+  stoppedAt: number | null;
   startDate: DateKey;
   source: MedicineSource;
   scanId: string | null;
@@ -50,11 +52,15 @@ export type Dose = {
   quantity: number;
 };
 
-export const DOSE_EVENT_KINDS = ['taken', 'skipped', 'snoozed', 'cleared'] as const;
+export const DOSE_EVENT_KINDS = ['taken', 'skipped', 'snoozed', 'cleared', 'missed'] as const;
 export type DoseEventKind = (typeof DOSE_EVENT_KINDS)[number];
-export type DoseEventVia = 'app' | 'notification';
+/** `system` = written by Tickdo itself (a dose passed its 60-minute window unrecorded). */
+export type DoseEventVia = 'app' | 'notification' | 'system';
 
-/** Append-only record of what the user did. `cleared` undoes a previous taken/skipped. */
+/**
+ * Append-only dose log. `cleared` undoes a previous taken/skipped. `missed` is written once
+ * when a dose passes its window with no decision, so history never depends on later edits.
+ */
 export type DoseEvent = {
   id: string;
   medicineId: string;

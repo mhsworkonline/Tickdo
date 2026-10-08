@@ -1,6 +1,6 @@
 {
   "name": "tickdo",
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "version": "1.0.0",
   "dependencies": {
     "@expo-google-fonts/baloo-2": "^0.4.2",
@@ -27,6 +27,7 @@
     "expo-notifications": "~57.0.22",
     "expo-router": "~57.0.25",
     "expo-secure-store": "~57.0.4",
+    "expo-sharing": "~57.0.22",
     "expo-splash-screen": "~57.0.9",
     "expo-sqlite": "~57.0.4",
     "expo-status-bar": "~57.0.1",
@@ -48,11 +49,13 @@
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.1"
+    "react-native-worklets": "0.10.1",
+    "tickdo-native": "file:./modules/tickdo-native"
   },
   "devDependencies": {
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "29.5.14",
+    "@types/node": "^22.20.5",
     "@types/react": "~19.2.2",
     "@types/sql.js": "^1.4.11",
     "eslint": "^9.0.0",
@@ -66,7 +69,7 @@
     "start": "expo start --dev-client",
     "android": "expo start --android --dev-client",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node scripts/typegen.js && tsc --noEmit",
     "test": "jest",
     "verify": "npm run typecheck && npm run lint && npm test",
     "build:dev-apk": "npx eas-cli@latest build --profile development --platform android",

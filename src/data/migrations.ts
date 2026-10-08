@@ -37,6 +37,7 @@ export const MIGRATIONS: readonly { version: number; sql: string }[] = [
         frequency TEXT NOT NULL,
         units_on_hand REAL,
         active INTEGER NOT NULL DEFAULT 1,
+        stopped_at INTEGER,
         start_date TEXT NOT NULL,
         source TEXT NOT NULL CHECK (source IN ('manual', 'scan')),
         scan_id TEXT REFERENCES scans(id) ON DELETE SET NULL,
@@ -60,21 +61,14 @@ export const MIGRATIONS: readonly { version: number; sql: string }[] = [
         id TEXT PRIMARY KEY,
         medicine_id TEXT NOT NULL REFERENCES medicines(id) ON DELETE CASCADE,
         scheduled_at INTEGER NOT NULL,
-        kind TEXT NOT NULL CHECK (kind IN ('taken', 'skipped', 'snoozed', 'cleared')),
+        kind TEXT NOT NULL CHECK (kind IN ('taken', 'skipped', 'snoozed', 'cleared', 'missed')),
         recorded_at INTEGER NOT NULL,
         snooze_until INTEGER,
-        via TEXT NOT NULL CHECK (via IN ('app', 'notification'))
+        via TEXT NOT NULL CHECK (via IN ('app', 'notification', 'system'))
       );
       CREATE INDEX dose_events_time ON dose_events(scheduled_at);
       CREATE INDEX dose_events_medicine ON dose_events(medicine_id, scheduled_at);
 
-      CREATE TABLE catalog (
-        id TEXT PRIMARY KEY,
-        brand TEXT,
-        salt TEXT,
-        strength TEXT,
-        form TEXT
-      );
 
       CREATE TABLE kv (
         key TEXT PRIMARY KEY,

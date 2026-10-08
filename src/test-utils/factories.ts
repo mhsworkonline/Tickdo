@@ -15,6 +15,7 @@ export function makeMedicine(overrides: Partial<Medicine> = {}): Medicine {
     ],
     unitsOnHand: null,
     active: true,
+    stoppedAt: null,
     startDate: '2026-01-01',
     source: 'manual',
     scanId: null,

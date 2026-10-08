@@ -33,7 +33,7 @@ describe('migrations', () => {
     expect(await migrate(db)).toBe(LATEST_VERSION);
     const tables = await db.getAllAsync<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name");
     expect(tables.map((t) => t.name)).toEqual(
-      expect.arrayContaining(['catalog', 'dose_events', 'kv', 'medicine_times', 'medicines', 'outbox', 'profiles', 'scans']),
+      expect.arrayContaining(['dose_events', 'kv', 'medicine_times', 'medicines', 'outbox', 'profiles', 'scans']),
     );
   });
 

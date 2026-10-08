@@ -24,6 +24,7 @@ type MedicineRow = {
   frequency: string;
   units_on_hand: number | null;
   active: number;
+  stopped_at: number | null;
   start_date: string;
   source: string;
   scan_id: string | null;
@@ -60,6 +61,8 @@ export type MedicineInput = {
 
 export type ScanOrigin = { scanId: string | null; sourceText: string };
 
+export type ScanRecord = { id: string; createdAt: number; photoUri: string | null; status: string };
+
 function toMedicine(row: MedicineRow, times: DoseTime[]): Medicine {
   return {
     id: row.id,
@@ -72,6 +75,7 @@ function toMedicine(row: MedicineRow, times: DoseTime[]): Medicine {
     times,
     unitsOnHand: row.units_on_hand,
     active: row.active === 1,
+    stoppedAt: row.stopped_at,
     startDate: row.start_date,
     source: row.source as MedicineSource,
     scanId: row.scan_id,
@@ -227,7 +231,8 @@ export function createRepositories(db: SqlDb, deps: Deps) {
     },
 
     async setActive(id: string, active: boolean) {
-      await db.runAsync('UPDATE medicines SET active = ?, updated_at = ? WHERE id = ?', [active ? 1 : 0, deps.now(), id]);
+      const now = deps.now();
+      await db.runAsync('UPDATE medicines SET active = ?, stopped_at = ?, updated_at = ? WHERE id = ?', [active ? 1 : 0, active ? null : now, now, id]);
     },
 
     async setUnitsOnHand(id: string, units: number | null) {
@@ -294,10 +299,19 @@ export function createRepositories(db: SqlDb, deps: Deps) {
       return event;
     },
 
-    /** Days (IST keys are computed by the caller) that have any events, newest first. */
-    async allEvents(): Promise<DoseEvent[]> {
-      const rows = await db.getAllAsync<EventRow>('SELECT * FROM dose_events ORDER BY scheduled_at DESC, recorded_at');
-      return rows.map(toEvent);
+    /** Writes one `missed` record per dose that passed its window with no decision. */
+    async recordMisses(misses: readonly { medicineId: string; scheduledAt: number }[]): Promise<number> {
+      if (misses.length === 0) return 0;
+      await db.transaction(async () => {
+        for (const m of misses) {
+          await db.runAsync(
+            `INSERT INTO dose_events (id, medicine_id, scheduled_at, kind, recorded_at, snooze_until, via)
+             VALUES (?, ?, ?, 'missed', ?, NULL, 'system')`,
+            [deps.newId(), m.medicineId, m.scheduledAt, deps.now()],
+          );
+        }
+      });
+      return misses.length;
     },
   };
 
@@ -316,7 +330,50 @@ export function createRepositories(db: SqlDb, deps: Deps) {
     },
   };
 
-  return { profiles, medicines, doses, kv };
+
+  const scans = {
+    async create(photoUri: string): Promise<string> {
+      const id = deps.newId();
+      await db.runAsync("INSERT INTO scans (id, created_at, photo_uri, status) VALUES (?, ?, ?, 'captured')", [id, deps.now(), photoUri]);
+      return id;
+    },
+    async setResult(id: string, ocrLineCount: number, candidateCount: number) {
+      await db.runAsync("UPDATE scans SET status = 'reviewing', ocr_line_count = ?, candidate_count = ? WHERE id = ?", [
+        ocrLineCount,
+        candidateCount,
+        id,
+      ]);
+    },
+    /** Counts only (no text) — used for the accuracy study. */
+    async finish(id: string, counts: { confirmedUnchanged: number; confirmedEdited: number; removed: number }) {
+      await db.runAsync(
+        "UPDATE scans SET status = 'done', confirmed_unchanged = ?, confirmed_edited = ?, removed = ? WHERE id = ?",
+        [counts.confirmedUnchanged, counts.confirmedEdited, counts.removed, id],
+      );
+    },
+    async markPhotoDeleted(id: string) {
+      await db.runAsync("UPDATE scans SET photo_uri = NULL, photo_deleted_at = ? WHERE id = ?", [deps.now(), id]);
+    },
+    async withPhotos(): Promise<ScanRecord[]> {
+      return db.getAllAsync<ScanRecord>(
+        "SELECT id, created_at AS createdAt, photo_uri AS photoUri, status FROM scans WHERE photo_uri IS NOT NULL",
+      );
+    },
+    async stats(): Promise<{ scans: number; candidates: number; unchanged: number; edited: number; removed: number; empty: number }> {
+      const r = await db.getFirstAsync<{ scans: number; candidates: number; unchanged: number; edited: number; removed: number; empty: number }>(
+        `SELECT COUNT(*) AS scans, COALESCE(SUM(candidate_count),0) AS candidates, COALESCE(SUM(confirmed_unchanged),0) AS unchanged,
+           COALESCE(SUM(confirmed_edited),0) AS edited, COALESCE(SUM(removed),0) AS removed,
+           COALESCE(SUM(CASE WHEN status = 'failed' OR (status = 'done' AND candidate_count = 0) THEN 1 ELSE 0 END),0) AS empty
+         FROM scans`,
+      );
+      return r ?? { scans: 0, candidates: 0, unchanged: 0, edited: 0, removed: 0, empty: 0 };
+    },
+    async markFailed(id: string) {
+      await db.runAsync("UPDATE scans SET status = 'failed' WHERE id = ?", [id]);
+    },
+  };
+
+  return { profiles, medicines, doses, kv, scans };
 }
 
 function currentDecision(events: readonly DoseEvent[]): 'taken' | 'skipped' | null {
