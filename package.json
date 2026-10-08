@@ -48,7 +48,9 @@
     "test": "jest",
     "verify": "npm run typecheck && npm run lint && npm test",
     "build:dev-apk": "npx eas-cli@latest build --profile development --platform android",
-    "build:preview-apk": "npx eas-cli@latest build --profile preview --platform android"
+    "build:preview-apk": "npx eas-cli@latest build --profile preview --platform android",
+    "emulator": "node runonemulator.js",
+    "emulator:fast": "node runonemulator.js --fast"
   },
   "private": true,
   "jest": {

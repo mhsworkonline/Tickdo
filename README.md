@@ -15,6 +15,20 @@ Medication reminder app for India. Expo (SDK 57) + TypeScript + Expo Router. And
 3. `cp .env.example .env` (values are only needed from Deliverable 6 onward).
 4. Checks: `npm run verify` (typecheck + lint + tests).
 
+### Running on the Android emulator (fastest for day-to-day work)
+
+Needs the Android SDK (found at `C:\Android\Sdk`) and an emulator created in Android Studio's Device Manager.
+
+```sh
+node runonemulator.js          # or: npm run emulator
+node runonemulator.js --fast   # or: npm run emulator:fast   (skip the native build)
+```
+The script boots the emulator, builds the app, installs it, and starts Metro. Leave that terminal open. Code changes then reload on the emulator straight away.
+- The **first** run takes about 30 minutes because Gradle downloads the NDK, CMake and dependencies. Later runs take a minute or two.
+- Use `--fast` when you've only changed TypeScript. Run it without `--fast` after adding or upgrading a native package.
+- Other options: `--avd <name>` picks an emulator, and `--cold` cold-boots a stuck emulator.
+- Press `Ctrl+M` in the emulator to open the developer menu (Reload, inspector).
+
 ### Getting the app on your Android phone
 
 Tickdo uses native modules (notifications, ML Kit, encrypted SQLite), so it **does not run in Expo Go**.
