@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "Tickdo"
+  },
+  "common": {
+    "continue": "Continue",
+    "notYetAvailable": "This part of the app is not built yet."
+  },
+  "onboarding": {
+    "language": {
+      "title": "Choose your language",
+      "subtitle": "You can change this later in Settings."
+    },
+    "disclaimer": {
+      "accept": "I understand",
+      "acceptHint": "Accepts the disclaimer and continues"
+    }
+  },
+  "languages": {
+    "en": "English",
+    "hi": "हिन्दी (Hindi)"
+  },
+  "disclaimer": {
+    "title": "Important",
+    "body": "Tickdo reminds you to take medicines exactly as you enter them. It does not replace a doctor or pharmacist. It never suggests or changes doses or timings. Always follow your prescription, and ask your doctor or pharmacist if you are unsure."
+  },
+  "tabs": {
+    "today": "Today",
+    "medicines": "Medicines",
+    "log": "Dose log",
+    "settings": "Settings"
+  },
+  "today": {
+    "title": "Today"
+  },
+  "medicines": {
+    "title": "Medicines"
+  },
+  "log": {
+    "title": "Dose log"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "about": "About Tickdo"
+  }
+}

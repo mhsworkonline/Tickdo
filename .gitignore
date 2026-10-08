@@ -41,3 +41,9 @@ example
 # generated native folders
 /ios
 /android
+
+# secrets
+.env
+
+# real prescription images / accuracy data must never be committed
+accuracy-data/

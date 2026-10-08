@@ -1,56 +1,73 @@
-# Welcome to your Expo app 👋
+# Tickdo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Medication reminder app for India. Expo (SDK 57) + TypeScript + Expo Router. Android first, iOS second, one codebase.
 
-## Get started
+**Hard rules** (enforced in code review and, where possible, by lint):
+- No LLM / generative AI, no paid cloud OCR or vision APIs. ESLint blocks known SDK imports (`eslint.config.js`).
+- The app never suggests, calculates or changes a dose or timing.
+- Nothing becomes a reminder until the user explicitly confirms it. No "confirm all".
+- Health data never goes to analytics or third parties.
 
-1. Install dependencies
+## Setup (Windows 11, no Android Studio needed)
 
-   ```bash
-   npm install
-   ```
+1. Install Node 22 LTS (already present).
+2. `npm install`
+3. `cp .env.example .env` (values are only needed from Deliverable 6 onward).
+4. Checks: `npm run verify` (typecheck + lint + tests).
 
-2. Start the app
+### Getting the app on your Android phone
 
-   ```bash
-   npx expo start
-   ```
+Tickdo uses native modules (notifications, ML Kit, encrypted SQLite), so it **does not run in Expo Go**.
+Builds run in Expo's cloud and produce an `.apk` you install directly.
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+One-time:
+```sh
+npx eas-cli@latest login          # your Expo account
+npx eas-cli@latest init           # links this folder to an Expo project (writes projectId into app.json)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Build an installable APK:
+```sh
+npm run build:preview-apk         # standalone app, no laptop needed to run it
+npm run build:dev-apk             # development client: live-reloads from your laptop
+```
+When the build finishes (about 10–20 minutes), EAS prints a link and a QR code. Open it on the phone, download the APK, and allow "install unknown apps" when Android asks.
 
-### Other setup steps
+With the **development** APK installed, run `npm start` on the laptop with the phone on the same Wi-Fi network. Then open Tickdo on the phone and pick the server. Code changes appear on the phone straight away. You only need a new APK after adding or changing a native module.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Folder structure
 
-## Learn more
+```
+src/
+  app/                 Expo Router routes only (screens + layouts)
+    onboarding/        language → disclaimer → (optional sign-in, D6)
+    (tabs)/            Today, Medicines, Dose log, Settings
+  domain/              (D2) pure functions: schedule generation, dose status, refill math,
+                       frequency lookup. No React, no I/O. 100% unit tested.
+  data/                (D2) expo-sqlite (SQLCipher) schema, migrations, repositories
+  features/
+    notifications/     (D3) expo-notifications, exact-alarm permission, reboot rescheduling
+    scan/              (D5) camera, image checks, ML Kit OCR, deterministic parser + fixtures
+    battery/           (D3) OEM battery-restriction detection and guidance
+  i18n/                i18next setup; locales/en.json, locales/hi.json (key parity is tested)
+  state/               React context for app-wide state
+  storage/             SecureStore-backed small preferences (not health data)
+  ui/                  Accessible primitives: 48dp targets, font scaling, high contrast
+  test-utils/          Jest mocks
+supabase/              (D6) migrations, RLS policies, policy tests
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Deliverables
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+| # | Deliverable | Status |
+|---|---|---|
+| 1 | Scaffold, environment, folder structure | Done |
+| 2 | Local DB schema, migrations, pure functions + tests | |
+| 3 | Manual add, Today screen, local notifications on device | |
+| 4 | Dose log, refill tracking | |
+| 5 | Prescription scan (ML Kit), parser, confirmation, accuracy report | |
+| 6 | Supabase auth, schema, RLS + tests | |
+| 7 | RevenueCat paywall, free-tier limits | |
+| 8 | Caregiver sharing | |
+| 9 | Play Store readiness | |
+| 10 | iOS build and checklist | |
