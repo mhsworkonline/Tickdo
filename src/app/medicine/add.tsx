@@ -1,9 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { canAddMedicine } from '@/domain/entitlements';
 import { useScanSettings } from '@/features/scan/settings';
+import { useLoad, useServices } from '@/services/AppServices';
 import { AppText } from '@/ui/AppText';
 import type { IconName } from '@/ui/Button';
 import { PressableCard } from '@/ui/components';
@@ -15,6 +18,13 @@ import { useColors } from '@/ui/use-colors';
 export default function AddMedicine() {
   const { t } = useTranslation();
   const scan = useScanSettings();
+  const { plan } = useServices();
+  const count = useLoad((s) => s.repos.medicines.countActive(s.profileId));
+
+  // Free plan: up to 3 active medicines. Existing reminders are never switched off.
+  useEffect(() => {
+    if (count !== null && !canAddMedicine(plan, count)) router.replace('/settings/plus');
+  }, [count, plan]);
 
   return (
     <Screen back backLabel={t('common.back')} title={t('add.title')} subtitle={t('add.subtitle')}>

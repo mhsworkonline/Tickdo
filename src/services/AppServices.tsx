@@ -15,6 +15,7 @@ import { AppState } from 'react-native';
 import { clock } from '@/domain/clock';
 import type { Repositories } from '@/data/repositories';
 import type { Plan } from '@/domain/entitlements';
+import { initBilling } from '@/features/plus/purchases';
 import { runMaintenance } from '@/services/maintenance';
 
 type Services = {
@@ -33,14 +34,16 @@ const ServicesContext = createContext<Services | null>(null);
 export function AppServicesProvider({
   repos,
   profileId,
+  initialPlan,
   children,
 }: {
   repos: Repositories;
   profileId: string;
+  initialPlan: Plan;
   children: ReactNode;
 }) {
   const [version, setVersion] = useState(0);
-  const [plan, setPlan] = useState<Plan>('free');
+  const [plan, setPlan] = useState<Plan>(initialPlan);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const changed = useCallback(() => {
@@ -49,6 +52,17 @@ export function AppServicesProvider({
     syncTimer.current = setTimeout(() => {
       runMaintenance().catch(() => undefined);
     }, 300);
+  }, []);
+
+  // Plan follows RevenueCat (purchase, renewal, expiry). Works offline from the cached value.
+  useEffect(() => {
+    let stop: (() => void) | null = null;
+    initBilling(setPlan)
+      .then((s) => {
+        stop = s;
+      })
+      .catch(() => undefined);
+    return () => stop?.();
   }, []);
 
   // Re-plan whenever the app comes back to the foreground (time has passed, statuses changed).

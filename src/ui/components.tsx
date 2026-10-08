@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
 
 import type { MedicineForm } from '@/domain/types';
 import { AppText } from '@/ui/AppText';
@@ -10,7 +10,7 @@ import type { IconName } from '@/ui/Button';
 import { fonts, MIN_TOUCH_TARGET, radius, spacing } from '@/ui/theme';
 import { useColors, useMedicineColor } from '@/ui/use-colors';
 
-export function Card({ children, style, tone = 'surface' }: { children: ReactNode; style?: ViewStyle; tone?: 'surface' | 'alt' | 'primary' }) {
+export function Card({ children, style, tone = 'surface' }: { children: ReactNode; style?: StyleProp<ViewStyle>; tone?: 'surface' | 'alt' | 'primary' }) {
   const c = useColors();
   const bg = tone === 'primary' ? c.primary : tone === 'alt' ? c.surfaceAlt : c.surface;
   return (

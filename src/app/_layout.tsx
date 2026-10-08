@@ -10,18 +10,20 @@ import { useColorScheme } from 'react-native';
 
 import { openDatabase } from '@/data/database';
 import type { Repositories } from '@/data/repositories';
+import type { Plan } from '@/domain/entitlements';
 import { actionFromIdentifier, configureNotifications, handleDoseAction } from '@/features/notifications/reminders';
 import { deviceLanguage, i18n, initI18n } from '@/i18n';
 import { registerBackgroundTasks } from '@/services/background-tasks';
 import { AppServicesProvider, useServices } from '@/services/AppServices';
 import { runMaintenance } from '@/services/maintenance';
+import { KV_PLAN } from '@/services/steps';
 import { AppStateProvider, useAppState } from '@/state/app-state';
 import { loadPreferences, type Preferences } from '@/storage/preferences';
 import { palette } from '@/ui/theme';
 
 SplashScreen.preventAutoHideAsync();
 
-type Boot = { prefs: Preferences; repos: Repositories; profileId: string };
+type Boot = { prefs: Preferences; repos: Repositories; profileId: string; plan: Plan };
 
 export default function RootLayout() {
   const scheme = useColorScheme();
@@ -43,13 +45,14 @@ export default function RootLayout() {
       await initI18n(prefs.language ?? deviceLanguage());
       const { repos } = await openDatabase();
       const profileId = await repos.profiles.ensureDefault('');
+      const plan: Plan = (await repos.kv.get(KV_PLAN)) === 'plus' ? 'plus' : 'free';
       // Never let notification setup block the app from opening; Diagnostics shows the state.
       await configureNotifications(i18n.t.bind(i18n)).catch((e: unknown) => {
         console.warn('notification setup failed', e instanceof Error ? e.message : e);
       });
       registerBackgroundTasks().catch(() => undefined);
       runMaintenance().catch(() => undefined);
-      if (!cancelled) setBoot({ prefs, repos, profileId });
+      if (!cancelled) setBoot({ prefs, repos, profileId, plan });
     })();
     return () => {
       cancelled = true;
@@ -79,7 +82,7 @@ export default function RootLayout() {
           setBoot(null);
           setBootKey((k) => k + 1);
         }}>
-        <AppServicesProvider repos={boot.repos} profileId={boot.profileId}>
+        <AppServicesProvider repos={boot.repos} profileId={boot.profileId} initialPlan={boot.plan}>
           <NotificationResponses />
           <RootStack />
         </AppServicesProvider>
