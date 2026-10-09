@@ -81,7 +81,8 @@
     "emulator": "node runonemulator.js",
     "emulator:fast": "node runonemulator.js --dev --fast",
     "test:db": "node --test supabase/tests/rls.test.mjs",
-    "emulator:dev": "node runonemulator.js --dev"
+    "emulator:dev": "node runonemulator.js --dev",
+    "deploy": "node deploy.js"
   },
   "private": true,
   "jest": {

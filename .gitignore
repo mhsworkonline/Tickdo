@@ -47,3 +47,40 @@ example
 
 # real prescription images / accuracy data must never be committed
 accuracy-data/
+
+# ── build output (generated; never commit) ──
+build/
+.gradle/
+*.apk
+*.aab
+*.ipa
+modules/**/android/build/
+modules/**/ios/build/
+.cxx/
+local.properties
+
+# ── signing keys and credentials ──
+*.keystore
+*.jks
+*.p8
+*.p12
+*.pem
+*.key
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+credentials.json
+.env.*
+!.env.example
+
+# ── editor / OS / tooling ──
+.idea/
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
+*.log
+.claude/
+
+# ── real prescriptions and study data must never be committed ──
+accuracy-data/
