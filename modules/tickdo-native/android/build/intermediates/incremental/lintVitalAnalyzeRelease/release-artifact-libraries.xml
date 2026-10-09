@@ -1,10 +1,10 @@
 <libraries>
   <library
       name=":@@:expo-modules-core::release"
-      jars="C:\Users\manis\.gradle\caches\9.3.1\transforms\11d1f71815ece5d7a7f6d59f89fd1956\workspace\transformed\out\jars\classes.jar;C:\Users\manis\.gradle\caches\9.3.1\transforms\11d1f71815ece5d7a7f6d59f89fd1956\workspace\transformed\out\jars\libs\R.jar"
+      jars="C:\Users\manis\.gradle\caches\9.3.1\transforms\cf658e5e93420b89da5255a6d59469ee\workspace\transformed\out\jars\classes.jar;C:\Users\manis\.gradle\caches\9.3.1\transforms\cf658e5e93420b89da5255a6d59469ee\workspace\transformed\out\jars\libs\R.jar"
       resolved="host.exp.exponent:expo-modules-core:57.0.21"
       provided="true"
-      folder="C:\Users\manis\.gradle\caches\9.3.1\transforms\11d1f71815ece5d7a7f6d59f89fd1956\workspace\transformed\out"
+      folder="C:\Users\manis\.gradle\caches\9.3.1\transforms\cf658e5e93420b89da5255a6d59469ee\workspace\transformed\out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

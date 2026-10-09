@@ -124,7 +124,7 @@ export default function TodayScreen() {
               <AppText variant="subtitle" tone="onPrimary">
                 {summary.total === 0
                   ? t('today.nothingScheduled')
-                  : summary.pending === 0
+                  : summary.pending === 0 && summary.missed === 0
                     ? t('today.allDone')
                     : t('today.progress', { taken: summary.taken, total: summary.total })}
               </AppText>
